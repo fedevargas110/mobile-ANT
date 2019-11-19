@@ -11,7 +11,6 @@ class _AttendeesState extends State<Attendees> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.blue,
     );
   }
 }

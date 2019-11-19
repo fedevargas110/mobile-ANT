@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:folklist/models/attendee.dart';
 import 'package:http/http.dart' as http;
-import 'dart:async';
 import 'dart:convert';
 
 class Guest extends StatefulWidget {
@@ -11,31 +11,43 @@ class Guest extends StatefulWidget {
 }
 
 class _GuestState extends State<Guest> {
-  final String url = 'https://swapi.co/api/people';
-  List data;
+  List<Attendee> data = <Attendee>[];
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
     this.getJsonData();
   }
-  
-  Future<String> getJsonData() async{
+
+  getJsonData() async {
     var response = await http.get('http://10.42.0.1:8080/apilist/guest/');
     print(response.body);
 
-    setState(() {
-      var convertDatatoToJson = jsonDecode(response.body);
-      data = convertDatatoToJson;
-    });
+    var attendees = <Attendee>[];
+    
+    json.decode(response.body).forEach((el) => attendees.add(new Attendee.fromJson(el)));
 
+    setState(() {
+      data = attendees;
+    });
+  }
+
+  updateAttendee(String id, bool attended) async {
+    await http.patch('http://10.42.0.1:8080/apilist/guest/$id/',
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: json.encode({"attended": !attended})
+      );
+
+    getJsonData();
   }
 
   @override
   Widget build(BuildContext context) {
     return new ListView.builder(
       itemCount: data == null ? 0 : data.length,
-      itemBuilder: (BuildContext context, int index){
+      itemBuilder: (BuildContext context, int index) {
         return new Container(
           child: new Center(
             child: new Column(
@@ -43,8 +55,23 @@ class _GuestState extends State<Guest> {
               children: <Widget>[
                 new Card(
                   child: new Container(
-                    child: new Text(data[index]['name']),
-                    padding: const EdgeInsets.all(20.0),
+                    child: new Column(children: <Widget>[
+                      ListTile(
+                        title: Text("${data[index].name} ${data[index].lastName}"),
+                        subtitle: Text("${data[index].dni}"),
+                        trailing: IconButton(
+                          icon: Icon(Icons.check),
+                          onPressed: () {
+                            print(data[index].attended);
+                            updateAttendee(
+                              data[index].idGuest.toString(),
+                              data[index].attended
+                            );
+                          },
+                        ),
+                      ),
+                    ]),
+//                    padding: const EdgeInsets.all(20.0),
                   ),
                 )
               ],
