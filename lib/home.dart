@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:folklist/attendees_page.dart';
-import 'package:folklist/guest_page.dart';
+import 'package:folklist/addPerson.dart';
+import 'package:folklist/people_page.dart';
+import 'package:folklist/models/person.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 
 class Home extends StatefulWidget {
@@ -12,10 +15,37 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   int _currentIndex = 0;
-  final List<Widget> _children = [
-    Guest(),
-    Attendees()
-  ];
+  List<Person> data = <Person>[];
+
+   getJsonData() async {
+    var response = await http.get('http://10.42.0.1:8080/apilist/people/');
+    print(response.body);
+
+    var attendees = <Person>[];
+    
+    json.decode(response.body).forEach((el) => attendees.add(new Person.fromJson(el)));
+
+    setState(() {
+      data = attendees;
+    });
+  }
+
+  updatePerson(String id, bool attended) async {
+    await http.patch('http://10.42.0.1:8080/apilist/people/$id/',
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: json.encode({"attended": !attended})
+      );
+
+    getJsonData();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    this.getJsonData();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,13 +53,39 @@ class _HomeState extends State<Home> {
       appBar: AppBar(
         title: Text('FOLKLIST'),
         centerTitle: true,
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.refresh),
+            onPressed: () {getJsonData();},
+          )
+        ],
       ),
-      body: _children[_currentIndex],
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => AddPerson()),
+          );
+        },
+      ),
+      body: <Widget>[
+        PeoplePage(
+          people: data.where((el) => !el.attended).toList(),
+          updatePeople: updatePerson,
+          icon: Icon(Icons.check),
+          message: 'No hay invitados',
+        ),
+        PeoplePage(
+          people: data.where((el) => el.attended).toList(),
+          updatePeople: updatePerson,
+          icon: Icon(Icons.cancel),
+          message: 'No hay ingresados al a previa',
+        )
+      ][_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
-        
         onTap: onTabTapped, 
         currentIndex: _currentIndex,
-
         items: [
           BottomNavigationBarItem(
             icon: new Icon(Icons.person),

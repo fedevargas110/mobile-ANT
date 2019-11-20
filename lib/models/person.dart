@@ -1,14 +1,14 @@
-class Attendee {
-  int idGuest;
+class Person {
+  int idPerson;
   String name;
   String lastName;
   String dni;
   bool attended;
 
-  Attendee({this.idGuest, this.name, this.lastName, this.dni, this.attended});
+  Person({this.idPerson, this.name, this.lastName, this.dni, this.attended});
 
-  Attendee.fromJson(Map<String, dynamic> json) {
-    idGuest = json['id_guest'];
+  Person.fromJson(Map<String, dynamic> json) {
+    idPerson = json['id_people'];
     name = json['name'];
     lastName = json['last_name'];
     dni = json['dni'];
@@ -17,7 +17,7 @@ class Attendee {
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id_guest'] = this.idGuest;
+    data['id_people'] = this.idPerson;
     data['name'] = this.name;
     data['last_name'] = this.lastName;
     data['dni'] = this.dni;
